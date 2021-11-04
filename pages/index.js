@@ -4,16 +4,23 @@ import { CourseList } from "@components/ui/course";
 import { BaseLayout } from "@components/ui/layout";
 import { getAllCourses } from "@content/courses/fetcher";
 
-export default function Home({ courses }) {
-  const { test } = useWeb3();
+function Home({ courses }) {
+  const { web3, isLoading } = useWeb3();
+  console.log(web3);
   return (
-      <BaseLayout>
-          {test}
+    <>
             <Hero />
             <CourseList courses={courses} />
-      </BaseLayout>
-  )
+    </>
+  );
 }
+
+const Wrapper = ({...props}) => 
+  <BaseLayout>
+    <Home {...props}/>
+  </BaseLayout>
+
+export default Wrapper;
 
 export function getStaticProps() {
   const { data } = getAllCourses();

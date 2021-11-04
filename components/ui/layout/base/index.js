@@ -1,4 +1,4 @@
-import Web3Provider from "@components/providers";
+import {Web3Provider} from "@components/providers";
 import { Navbar, Footer } from "@components/ui/common";
 
 export default function BaseLayout({ children }) {
