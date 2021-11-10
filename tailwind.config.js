@@ -6,6 +6,9 @@ module.exports = {
       maxWidth: {
         "8xl": "1920px"
       },
+      flex: {
+        "2": "2 2 0%"
+      }
     },
   },
   variants: {
