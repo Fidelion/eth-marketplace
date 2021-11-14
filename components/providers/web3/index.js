@@ -7,13 +7,29 @@ import { loadContract } from "@utils/loadContract";
 
 const Web3Context = createContext(null);
 
+const createWeb3State = ({web3, provider, contract, isLoading}) => {
+    return {
+        web3,
+        provider,
+        contract,
+        isLoading,
+        hooks: setupHooks({web3, provider, contract})
+    }
+}
+
 export default function Web3Provider({children}) {
     const [web3Api, setWeb3Api] = useState({
         provider: null,
         web3: null,
         contract: null,
         isLoading: true,
-        hooks: setupHooks()
+        hooks: setupHooks(createWeb3State({
+            web3: null,
+            provider: null,
+            contract: null,
+            isLoading: true
+        })
+        )
     });
 
     useEffect(() => {
@@ -21,14 +37,13 @@ export default function Web3Provider({children}) {
             const provider = await detectEthereumProvider();
             if(provider){
                 const web3 = new Web3(provider);
-                const contract = loadContract("CourseMarketplace", provider);
-                console.log(contract);
+                const contract = await loadContract("CourseMarketplace", web3);
                 setWeb3Api({
                     provider,
                     web3,
                     contract,
                     isLoading: false,
-                    hooks: setupHooks(web3, provider)
+                    hooks: setupHooks({web3, provider, contract})
                 }) 
             } else {
                 setWeb3Api(api => ({...api, isLoading: false}));

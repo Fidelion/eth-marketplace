@@ -20,9 +20,11 @@ const LINKS = [
 export default function Header() {
     return(
         <>
-        <Wallet />
+        <div className="pt-4">
+            <Wallet />
+        </div>
           <EthRates />
-          <div className="flex flex-row-reverse py-4 p-x4 sm:px-6 lg:px-8">
+          <div className="flex flex-row-reverse p-4 sm:px-6 lg:px-8">
           <Breadcrumbs items={LINKS}/>
           </div>
         </>

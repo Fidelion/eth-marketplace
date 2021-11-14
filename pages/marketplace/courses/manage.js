@@ -7,12 +7,10 @@ import { OrderCard } from "@components/ui/order";
 function ManageCourses() {
     return (
         <>
-            <div className="py-4">
-                <MarketHeader />
-                <CourseFilter />
-            </div>
+            <MarketHeader />
+            <CourseFilter />
                 <section className="grid grid-cols-1">
-                <OrderCard>
+                {/*<OrderCard>
                     <div className="flex mr-2 relative rounded-md">
                         <input
                         type="text"
@@ -24,7 +22,7 @@ function ManageCourses() {
                         Verify
                         </Button>
                     </div>
-                </OrderCard>
+                </OrderCard>*/}
                 </section>
         </>
     )

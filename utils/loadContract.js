@@ -1,19 +1,18 @@
-import contract from "@truffle/contract";
+const NETWORK_ID = process.env.NEXT_PUBLIC_NETWORK_ID;
 
-export const loadContract = async(name, provider) => {
-    const res = await fetch(`contracts/${name}.json`);
+export const loadContract = async(name, web3) => {
+    const res = await fetch(`/contracts/${name}.json`);
     const Artifact = await res.json();
 
-    const _contract = contract(Artifact);
-    _contract.setProvider(provider);
-
-    let deployedContract = null;
-
+    let contract = null;
     try {
-        deployedContract = await _contract.deployed();
+        contract = new web3.eth.Contract(
+            Artifact.abi,
+            Artifact.networks[NETWORK_ID].address
+        );
     } catch (err) {
         console.error(err);
     }
 
-    return deployedContract;
+    return contract;
 }
