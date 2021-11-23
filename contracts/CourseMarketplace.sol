@@ -22,6 +22,11 @@ contract CourseMarketplace {
     ///Only owner is allowed to change ownership of the contract
     error OwnerError();
 
+    ///Course has not been activated
+    error CourseIsNotCreated();
+
+    ///Course has invalid state;
+    error InvalidState();
     modifier onlyOwner() {
         if (msg.sender != getContractOwner()) {
             revert OwnerError();
@@ -68,6 +73,38 @@ contract CourseMarketplace {
         });
     }
 
+    function activateCourse(bytes32 courseHash) external onlyOwner {
+        if (!isCourseCreated(courseHash)) {
+            revert CourseIsNotCreated();
+        }
+
+        Course storage course = ownedCourses[courseHash];
+
+        if (course.state != State.Purchased) {
+            revert InvalidState();
+        }
+
+        course.state = State.Activated;
+    }
+
+    function deActivateCourse(bytes32 courseHash) external onlyOwner {
+        if (!isCourseCreated(courseHash)) {
+            revert CourseIsNotCreated();
+        }
+
+        Course storage course = ownedCourses[courseHash];
+
+        if (course.state != State.Purchased) {
+            revert InvalidState();
+        }
+
+        (bool success, ) = course.owner.call{value: course.price}("");
+        require(success, "Transfer Failed!");
+
+        course.state = State.Deactivated;
+        course.price = 0;
+    }
+
     function transferOwnership(address newOwner) external onlyOwner {
         setContractOwner(newOwner);
     }
@@ -88,19 +125,25 @@ contract CourseMarketplace {
         return ownedCourses[courseHash];
     }
 
+    function getContractOwner() public view returns (address) {
+        return owner;
+    }
+
+    function isCourseCreated(bytes32 courseHash) private view returns (bool) {
+        return
+            ownedCourses[courseHash].owner !=
+            0x0000000000000000000000000000000000000000;
+    }
+
+    function setContractOwner(address setOwner) private {
+        owner = payable(setOwner);
+    }
+
     function hasCourseOwnership(bytes32 courseHash)
         private
         view
         returns (bool)
     {
         return ownedCourses[courseHash].owner == msg.sender;
-    }
-
-    function getContractOwner() public view returns (address) {
-        return owner;
-    }
-
-    function setContractOwner(address setOwner) private {
-        owner = payable(setOwner);
     }
 }

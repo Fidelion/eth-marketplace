@@ -19,7 +19,7 @@ export default function Wallet() {
               </Button>
             </div>
             <div>
-            { network.hasFinishedFirstFetch && !network.isSupported && 
+            { network.hasInitialResponse && !network.isSupported && 
             <div className="bg-red-400 p-4 rounded-lg">
               <div>Connected to the wrong network</div>
               <div>
