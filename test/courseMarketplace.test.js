@@ -1,9 +1,17 @@
 const { catchRevert } = require("./utils/exceptions");
 const CourseMarketplace = artifacts.require("CourseMarketplace");
 
-const getBalance = async address => web3.eth.getBalance(address);
+const getBalance = async (address) => web3.eth.getBalance(address);
 
 const toBN = value => web3.utils.toBN(value);
+
+const getGas = async result => {
+    const tx = await web3.eth.getTransaction(result.tx);
+    const gasUsed = toBN(result.receipt.gasUsed);
+    const gasPrice = toBN(tx.gasPrice);
+    const gas = gasUsed.mul(gasPrice);
+    return gas;
+}
 
 contract("CourseMarketplace", accounts => {
 
@@ -114,24 +122,55 @@ contract("CourseMarketplace", accounts => {
 
     describe("Deactivate Course Feature", () => {
         let courseHash2 = null;
-        
+        let currentOwner = null;
+
         before(async() => {
             await _contract.purchaseCourse(courseId2, proof2, {from: buyer, value});
             courseHash2 = await _contract.getCourseAtIndex(1);
+            currentOwner = await _contract.getContractOwner();
         })
 
         it("should NOT be able to deactivate the course if the user is not contract owner", async() => {
-            await catchRevert(_contract.deActivateCourse(courseHash2, {from:buyer}));
+            await catchRevert(_contract.deactivateCourse(courseHash2, {from:buyer}));
         })
 
         it("should have status of deactivated and price 0", async() => {
-            await _contract.deActivateCourse(courseHash2, {from: contractOwner});
+            const beforeTxOwnerBalance = await getBalance(currentOwner);
+            const beforeTxBuyerBalance = await getBalance(buyer);
+            const beforeTxContractBalance = await getBalance(_contract.address);
+            
+            const result = await _contract.deactivateCourse(courseHash2, {from: contractOwner});
+            
+            const afterTxOwnerBalance = await getBalance(currentOwner);
+            const afterTxBuyerBalance = await getBalance(buyer);
+            const afterTxContractBalance = await getBalance(_contract.address);
+            
             const course = await _contract.getCourseAtHash(courseHash2);
             const expectedState = 2;
             const expectedPrice = 0;
+            const gas = await getGas(result);
 
             assert.equal(course.state, expectedState, "Course is NOT deactivated");
             assert.equal(course.price, expectedPrice, "Course price should be 0 upon deactivating");
+
+            assert.equal(
+                toBN(beforeTxOwnerBalance).sub(gas).toString(), 
+                afterTxOwnerBalance, 
+                "Contract owner balance is not correct"
+                );
+
+            assert.equal(
+                toBN(beforeTxContractBalance).sub(toBN(value)).toString(), 
+                afterTxContractBalance, 
+                "Contract balance is not correct"
+                );
+            
+            assert.equal(
+                toBN(beforeTxBuyerBalance).add(toBN(value)).toString(), 
+                afterTxBuyerBalance, 
+                "Contract balance is not correct"
+                );
+
         })
 
         it("should NOT be able to activate course after deactivating it, course should be repurchased first", async() => {
@@ -158,13 +197,12 @@ contract("CourseMarketplace", accounts => {
 
         it("should be able repurchase with the original buyer", async () => {
         const beforeTxBuyerBalance = await getBalance(buyer);
+        const beforeTxContractBalance = await getBalance(_contract.address);
         const result = await _contract.repurchaseCourse(courseHash2, {from: buyer, value});
-        const tx = await web3.eth.getTransaction(result.tx);
         const afterTxBuyerBalance = await getBalance(buyer);
+        const afterTxContractBalance = await getBalance(_contract.address);
 
-        const gasUsed = toBN(result.receipt.gasUsed);
-        const gasPrice = toBN(tx.gasPrice);
-        const gas = gasUsed.mul(gasPrice);
+        const gas = await getGas(result);
        
         const course = await _contract.getCourseAtHash(courseHash2);
        
@@ -172,12 +210,19 @@ contract("CourseMarketplace", accounts => {
 
         assert.equal(course.state, exptectedState, "The course is not in purchased state")
         assert.equal(course.price, value, `The course price is not equal to ${value}`)
-        })
+
 
         assert.equal(
             toBN(beforeTxBuyerBalance).sub(toBN(value)).sub(gas).toString(), 
             afterTxBuyerBalance, 
             "Client balance is not correct.");
+
+        assert.equal(
+            toBN(beforeTxContractBalance).add(toBN(value)).toString(), 
+            afterTxContractBalance, 
+            "Client balance is not correct.");
+
+        })
 
         it("should NOT be able to repurchase purchased course", async () => {
         await catchRevert(_contract.repurchaseCourse(courseHash2, {from: buyer}))
