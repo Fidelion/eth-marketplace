@@ -10,25 +10,29 @@ const defaultOrder = {
 
 const _dontProcessForm = (isDisabled = false, message = "") => ({isDisabled, message})
 
-const dontProcessForm = ({price, email, confirmationEmail}, hasAgreedTOS) => {
+const dontProcessForm = ({price, email, confirmationEmail}, hasAgreedTOS, isNewPurchase) => {
 
   if(!price || Number(price) <= 0) {
     return _dontProcessForm(true, "Price is not right")
   }
-  else if(email.length === 0 || confirmationEmail.length === 0 ) {
+
+  if(isNewPurchase) {
+    if(email.length === 0 || confirmationEmail.length === 0 ) {
     return _dontProcessForm(true)
+    }
+    else if(email !== confirmationEmail) {
+      return _dontProcessForm(true, "Emails dont match")
+    }
   }
-  else if(email !== confirmationEmail) {
-    return _dontProcessForm(true, "Emails dont match")
-  }
-  else if(!hasAgreedTOS) {
+  
+  if(!hasAgreedTOS) {
     return _dontProcessForm(true, "You must agree to terms of service")
   }
 
   return _dontProcessForm();
 }
 
-export default function OrderModal({course, onClose, onSubmit}) {
+export default function OrderModal({course, onClose, onSubmit, isNewPurchase}) {
     const [isOpen, setIsOpen] = useState(false);
     const [order, setOrder] = useState(defaultOrder);
     const [enabledPrice, setEnabledPrice] = useState(false);
@@ -53,7 +57,7 @@ export default function OrderModal({course, onClose, onSubmit}) {
         onClose()
     }    
     
-    const formState = dontProcessForm(order, hasAgreedTOS);
+    const formState = dontProcessForm(order, hasAgreedTOS, isNewPurchase);
 
     return (
     <Modal isOpen={isOpen}>
@@ -64,86 +68,90 @@ export default function OrderModal({course, onClose, onSubmit}) {
               <h3 className="mb-7 text-lg font-bold leading-6 text-gray-900" id="modal-title">
                 {course.title}
               </h3>
-              <div className="mt-1 relative rounded-md">
-                <div className="mb-1">
-                  <label className="mb-2 font-bold">Price(eth)</label>
-                  <div className="text-xs text-gray-700 flex">
-                    <label className="flex items-center mr-2">
-                      <input
-                        checked={enabledPrice}
-                        onChange={({target: {checked}}) => {
-                          setOrder({
-                            ...order,
-                            price: checked ? order.price : eth.perItem
-                          })
-                          setEnabledPrice(checked)
-                        }}
-                        type="checkbox"
-                        className="form-checkbox"
-                      />
-                    </label>
-                    <span>Adjust Price - only when the price is not correct</span>
+                <div className="mt-1 relative rounded-md">
+                  <div className="mb-1">
+                    <label className="mb-2 font-bold">Price(eth)</label>
+                    <div className="text-xs text-gray-700 flex">
+                      <label className="flex items-center mr-2">
+                        <input
+                          checked={enabledPrice}
+                          onChange={({target: {checked}}) => {
+                            setOrder({
+                              ...order,
+                              price: checked ? order.price : eth.perItem
+                            })
+                            setEnabledPrice(checked)
+                          }}
+                          type="checkbox"
+                          className="form-checkbox"
+                        />
+                      </label>
+                      <span>Adjust Price - only when the price is not correct</span>
+                    </div>
                   </div>
+                  <input
+                    disabled={!enabledPrice}
+                    value={order.price}
+                    onChange={({target: {value}}) => {
+                      if(isNaN(value)) {
+                        return ;
+                      }
+                      setOrder({
+                        ...order,
+                        price: value
+                      })
+                    }}
+                    type="text"
+                    name="price"
+                    id="price"
+                    className="disabled:opacity-50 w-80 mb-1 focus:ring-indigo-500 shadow-md focus:border-indigo-500 block pl-7 p-4 sm:text-sm border-gray-300 rounded-md"
+                  />
+                  <p className="text-xs text-gray-700">
+                    Price will be verified at the time of the order. If the price will be lower, order can be declined (+- 2% slipage is allowed)
+                  </p>
                 </div>
-                <input
-                  disabled={!enabledPrice}
-                  value={order.price}
-                  onChange={({target: {value}}) => {
-                    if(isNaN(value)) {
-                      return ;
-                    }
-                    setOrder({
-                      ...order,
-                      price: value
-                    })
-                  }}
-                  type="text"
-                  name="price"
-                  id="price"
-                  className="disabled:opacity-50 w-80 mb-1 focus:ring-indigo-500 shadow-md focus:border-indigo-500 block pl-7 p-4 sm:text-sm border-gray-300 rounded-md"
-                />
-                <p className="text-xs text-gray-700">
-                  Price will be verified at the time of the order. If the price will be lower, order can be declined (+- 2% slipage is allowed)
-                </p>
-              </div>
-              <div className="mt-2 relative rounded-md">
-                <div className="mb-1">
-                  <label className="mb-2 font-bold">Email</label>
+              {isNewPurchase &&
+              <>
+                <div className="mt-2 relative rounded-md">
+                  <div className="mb-1">
+                    <label className="mb-2 font-bold">Email</label>
+                  </div>
+                  <input
+                    onChange={({target: {value}}) => {
+                      setOrder({
+                        ...order,
+                        email: value.trim()
+                      })
+                    }}
+                    type="email"
+                    name="email"
+                    id="email"
+                    className="w-80 focus:ring-indigo-500 shadow-md focus:border-indigo-500 block pl-7 p-4 sm:text-sm border-gray-300 rounded-md"
+                    placeholder="x@y.com"
+                  />
+                  <p className="text-xs text-gray-700 mt-1">
+                  It&apos;s important to fill a correct email, otherwise the order cannot be verified. We are not storing your email anywhere
+                  </p>
                 </div>
-                <input
-                  onChange={({target: {value}}) => {
-                    setOrder({
-                      ...order,
-                      email: value.trim()
-                    })
-                  }}
-                  type="email"
-                  name="email"
-                  id="email"
-                  className="w-80 focus:ring-indigo-500 shadow-md focus:border-indigo-500 block pl-7 p-4 sm:text-sm border-gray-300 rounded-md"
-                  placeholder="x@y.com"
-                />
-                <p className="text-xs text-gray-700 mt-1">
-                It&apos;s important to fill a correct email, otherwise the order cannot be verified. We are not storing your email anywhere
-                </p>
-              </div>
-              <div className="my-2 relative rounded-md">
-                <div className="mb-1">
-                  <label className="mb-2 font-bold">Repeat Email</label>
+                <div className="my-2 relative rounded-md">
+                  <div className="mb-1">
+                    <label className="mb-2 font-bold">Repeat Email</label>
+                  </div>
+                  <input
+                    onChange={({target: {value}}) => {
+                      setOrder({
+                        ...order,
+                        confirmationEmail: value.trim()
+                      })
+                    }}
+                    type="email"
+                    name="confirmationEmail"
+                    id="confirmationEmail"
+                    className="w-80 focus:ring-indigo-500 shadow-md focus:border-indigo-500 block pl-7 p-4 sm:text-sm border-gray-300 rounded-md" placeholder="x@y.com" />
                 </div>
-                <input
-                  onChange={({target: {value}}) => {
-                    setOrder({
-                      ...order,
-                      confirmationEmail: value.trim()
-                    })
-                  }}
-                  type="email"
-                  name="confirmationEmail"
-                  id="confirmationEmail"
-                  className="w-80 focus:ring-indigo-500 shadow-md focus:border-indigo-500 block pl-7 p-4 sm:text-sm border-gray-300 rounded-md" placeholder="x@y.com" />
-              </div>
-              <div className="text-xs text-gray-700 flex">
+              </>
+              }
+              <div className="text-xs text-gray-700 flex mt-5">
                 <label className="flex items-center mr-2">
                   <input
                     checked={hasAgreedTOS}
