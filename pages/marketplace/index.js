@@ -89,13 +89,6 @@ function Marketplace({ courses }) {
     }
   }
 
-  const notify = () => {
-    const resolveWithSomeData = new Promise(resolve => setTimeout(() => resolve({
-      transactionHash: "0x610ebf769141514a711bb9ef01c09340f14fe28c3709a3c12c0c05dd5e7c668a"
-    }), 3000));
-    withToast(resolveWithSomeData);
-  }
-
   const cleanupModal = () => {
     setSelectedCourse(null);
     setIsNewPurchase(true);
@@ -103,9 +96,6 @@ function Marketplace({ courses }) {
   return (
     <>
             <MarketHeader />
-            <Button onClick={notify}> 
-              Notify
-            </Button>
             <CourseList courses={courses}>
              { course => {
                 const owned = ownedCourses.lookup[course.id];
