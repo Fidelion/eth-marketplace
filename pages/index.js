@@ -6,7 +6,6 @@ import { getAllCourses } from "@content/courses/fetcher";
 
 function Home({ courses }) {
   const { web3, isLoading } = useWeb3();
-  console.log(web3);
   return (
     <>
             <Hero />
