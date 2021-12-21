@@ -21,7 +21,7 @@ function OwnedCourses({courses}) {
         { ownedCourses.isEmpty &&
             <div>
                 <Message type="warning">
-                    <div>You don't own any course</div>
+                    <div>You don&apos;t own any course</div>
                     <Link href="/marketplace">
                         <a className="font-normal hover:underline">
                             <i>Purchase Course</i>

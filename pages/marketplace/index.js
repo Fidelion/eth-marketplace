@@ -169,13 +169,19 @@ function Marketplace({ courses }) {
                                   <div className="ml-1">
                                   <Button
                                     size="md"
-                                    disabled={false}
+                                    disabled={isBusy}
                                     onClick={() => {
                                       setIsNewPurchase(false);
                                       setSelectedCourse(course);
                                     }} 
                                     variant="purple">
-                                      Fund to Activate
+                                      { isBusy ?
+                                        <div className="flex">
+                                          <Loader size="sm" />
+                                          <div className="ml-2">In Progress</div>
+                                        </div> :
+                                        <div>Fund to Activate</div>
+                                      }
                                   </Button>
                                   </div>
                                 }

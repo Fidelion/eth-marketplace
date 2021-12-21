@@ -15,7 +15,7 @@ export default function Hero({ title, description, image, hasOwner }) {
                 <div className="sm:text-center lg:text-left">
                     {   hasOwner &&
                         <div className="text-xl inline-block p-4 py-2 font-bold rounded-full bg-green-200 text-green-700">
-                            You're an owner of:
+                            You&apos;re an owner of:
                         </div>
                     }
                     <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
