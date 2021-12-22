@@ -17,7 +17,7 @@ export const withToast = (promise) => {
             </div>
           )
         },
-        icon: false,
+        icon: true,
       },
       success: {
         render({data}){
